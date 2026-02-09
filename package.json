@@ -1,0 +1,19 @@
+{
+  "name": "banner-strategy-backend",
+  "version": "1.0.0",
+  "description": "Banner strategy management backend",
+  "main": "index.html",
+  "scripts": {
+    "dev": "node server.cjs",
+    "build": "node build.js"
+  },
+  "keywords": [
+    "banner",
+    "strategy",
+    "vue",
+    "element-plus"
+  ],
+  "author": "JimmyBeck",
+  "license": "ISC",
+  "dependencies": {}
+}
