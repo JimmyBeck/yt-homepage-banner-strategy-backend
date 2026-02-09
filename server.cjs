@@ -16,7 +16,7 @@ const server = http.createServer((req, res) => {
 
     let filePath = '.' + req.url.split('?')[0];
     if (filePath === './' || filePath === '.') {
-        filePath = './banner-strategy-demo.html';
+        filePath = './index.html';
     }
 
     const extname = path.extname(filePath);

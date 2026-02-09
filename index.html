@@ -1,24 +1,773 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Trae Project</title>
-    <script type="module">
-      if (import.meta.hot?.on) {
-        import.meta.hot.on('vite:error', (error) => {
-          if (error.err) {
-            console.error(
-              [error.err.message, error.err.frame].filter(Boolean).join('\n'),
-            )
-          }
-        })
-      }
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banner策略管理后台 - 研途</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+    <!-- Element Plus JS -->
+    <script src="https://unpkg.com/element-plus"></script>
+    <!-- Element Plus Icons -->
+    <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+    
+    <style>
+        body { font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Microsoft YaHei', Arial, sans-serif; background-color: #f5f7fa; margin: 0; }
+        
+        /* 覆盖 Element Plus 默认样式以匹配原型 */
+        .el-header { 
+            background-color: #fff; 
+            border-bottom: 1px solid #e4e7ed; 
+            height: 50px !important;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .el-aside { 
+            background-color: #fff; 
+            border-right: 1px solid #e4e7ed;
+            height: 100vh; 
+            overflow-y: auto;
+        }
+        
+        /* 侧边栏菜单样式 */
+        .el-menu { border-right: none; }
+        .el-sub-menu__title { font-size: 14px; font-weight: 500; color: #303133; }
+        .el-menu-item { font-size: 13px; color: #606266; height: 40px; line-height: 40px; }
+        .el-menu-item.is-active { color: #409EFF; background-color: #ecf5ff; border-right: 2px solid #409EFF; }
+        
+        /* Logo区域 */
+        .logo-container { 
+            height: 50px; 
+            display: flex; 
+            align-items: center; 
+            padding-left: 20px; 
+            border-bottom: 1px solid #e4e7ed;
+        }
+        .logo-icon { width: 24px; height: 24px; margin-right: 8px; color: #409EFF; }
+        .logo-text { font-size: 16px; font-weight: bold; color: #303133; }
+        
+        /* 顶部 Tab 样式 */
+        .top-nav-tabs .el-tabs__header { margin: 0; }
+        .top-nav-tabs .el-tabs__nav-wrap::after { display: none; }
+        .top-nav-tabs .el-tabs__item { height: 50px; line-height: 50px; font-size: 14px; color: #606266; }
+        .top-nav-tabs .el-tabs__item.is-active { color: #303133; font-weight: bold; }
+        
+        /* 主内容区样式 */
+        .main-content { padding: 20px; background-color: #fff; margin: 20px; border-radius: 4px; min-height: calc(100vh - 90px); }
+        
+        /* 年份 Tabs */
+        .year-tabs { margin-bottom: 20px; border-bottom: 1px solid #ebeef5; }
+        .year-tab-item { 
+            display: inline-block; 
+            padding: 0 16px 10px; 
+            cursor: pointer; 
+            color: #606266; 
+            font-size: 14px;
+            position: relative;
+        }
+        .year-tab-item.active { color: #409EFF; font-weight: bold; }
+        .year-tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 16px;
+            right: 16px;
+            height: 2px;
+            background-color: #409EFF;
+        }
+        
+        /* 表格样式微调 */
+        .el-table th.el-table__cell { background-color: #fff; font-weight: bold; color: #303133; }
+        .el-table td.el-table__cell { padding: 8px 0; }
+        .el-button--small { padding: 5px 12px; font-size: 12px; border-radius: 2px; }
+        
+        /* 操作按钮组 */
+        .action-btn { 
+            background-color: #409EFF; 
+            border-color: #409EFF; 
+            color: #fff; 
+            padding: 4px 8px;
+            border-radius: 2px;
+            font-size: 12px;
+            margin-right: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            height: 24px;
+            cursor: pointer;
+        }
+        .action-btn:hover { background-color: #66b1ff; }
+        .action-btn.is-disabled { background-color: #a0cfff; cursor: not-allowed; }
+        
+        /* 搜索区域 */
+        .search-area .el-form-item { margin-bottom: 0; margin-right: 12px; }
+        .search-area .el-input__wrapper { box-shadow: 0 0 0 1px #dcdfe6 inset; }
+        
+        /* 危险按钮 */
+        .action-btn.is-danger {
+            background-color: #F56C6C;
+            border-color: #F56C6C;
+        }
+        .action-btn.is-danger:hover {
+            background-color: #f78989;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <el-container>
+            <!-- 侧边栏 -->
+            <el-aside :width="isCollapse ? '64px' : '200px'" class="transition-all duration-300">
+                <div class="logo-container" :class="{'justify-center pl-0': isCollapse}">
+                    <!-- 模拟马头图标 -->
+                    <svg class="logo-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path fill="currentColor" d="M512 64C264.6 64 64 264.6 64 264.6 448 448 448 448-200.6 448-448S759.4 64 512 64zm0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"/><path fill="currentColor" d="M512 140c-205.4 0-372 166.6-372 372s166.6 372 372 372 372-166.6 372-372-166.6-372-372-372zm0 680c-170.1 0-308-137.9-308-308s137.9-308 308-308 308 137.9 308 308-137.9 308-308 308z"/></svg>
+                    <span class="logo-text" v-show="!isCollapse">研途</span>
+                </div>
+                <el-menu
+                    default-active="recommend-banner"
+                    class="el-menu-vertical"
+                    :unique-opened="true"
+                    :default-openeds="['ads-manage']"
+                    :collapse="isCollapse"
+                    :collapse-transition="false"
+                >
+                    <el-sub-menu index="payment">
+                        <template #title>
+                            <el-icon><CreditCard /></el-icon>
+                            <span>支付方式管理</span>
+                        </template>
+                    </el-sub-menu>
+                    <el-sub-menu index="study">
+                        <template #title>
+                            <el-icon><Reading /></el-icon>
+                            <span>学习互动管理</span>
+                        </template>
+                    </el-sub-menu>
+                    <el-sub-menu index="ads-manage">
+                        <template #title>
+                            <el-icon><DataLine /></el-icon>
+                            <span>广告管理</span>
+                        </template>
+                        <el-menu-item index="startup">启动页管理</el-menu-item>
+                        <el-menu-item index="popup">弹窗广告</el-menu-item>
+                        <el-menu-item index="recommend-banner">推荐页头图广告</el-menu-item>
+                        <el-menu-item index="carousel">轮播管理</el-menu-item>
+                        <el-menu-item index="test-agg">测试聚合页轮播</el-menu-item>
+                        <el-menu-item index="test-report">测试报告页广告</el-menu-item>
+                        <el-menu-item index="diamond">金刚区广告</el-menu-item>
+                        <el-menu-item index="recommend-slot">推荐位广告</el-menu-item>
+                        <el-menu-item index="mid-ops">中部运营位</el-menu-item>
+                        <el-menu-item index="search-ad">搜索页广告</el-menu-item>
+                        <el-menu-item index="course-cat">课程分类页广告</el-menu-item>
+                    </el-sub-menu>
+                </el-menu>
+            </el-aside>
+
+            <el-container>
+                <!-- 顶部 Header -->
+                <el-header>
+                    <el-icon class="mr-4 text-gray-500 cursor-pointer" @click="isCollapse = !isCollapse">
+                        <component :is="isCollapse ? 'Expand' : 'Fold'"></component>
+                    </el-icon>
+                    <div class="flex-1">
+                        <el-tabs v-model="activeTopTab" class="top-nav-tabs">
+                            <el-tab-pane label="考研" name="kaoyan"></el-tab-pane>
+                            <el-tab-pane label="留学" name="liuxue"></el-tab-pane>
+                            <el-tab-pane label="研途考研" name="yantu"></el-tab-pane>
+                        </el-tabs>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="mr-4">管理员</span>
+                        <el-icon><Setting /></el-icon>
+                    </div>
+                </el-header>
+
+                <!-- 主内容区 -->
+                <div class="p-5" style="background-color: #f0f2f5; height: calc(100vh - 50px); overflow: auto;">
+                    <div class="bg-white p-5 rounded shadow-sm" style="min-height: 800px; position: relative;">
+                        <!-- 年份 Tabs -->
+                        <div class="year-tabs">
+                            <span 
+                                v-for="year in ['2026', '2027', '2028', '2029']" 
+                                :key="year"
+                                :class="['year-tab-item', { active: currentYear === year }]"
+                                @click="currentYear = year"
+                            >
+                                {{ year }}
+                            </span>
+                        </div>
+
+                        <!-- 搜索栏 -->
+                        <div class="flex items-center justify-between mb-4 search-area relative">
+                            <el-form :inline="true" :model="searchForm" class="flex-1">
+                                <el-form-item>
+                                    <el-input v-model="searchForm.id" placeholder="广告ID" style="width: 140px"></el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-input v-model="searchForm.name" placeholder="广告名称" style="width: 140px"></el-input>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-select v-model="searchForm.type" placeholder="跳转类型" style="width: 120px">
+                                        <el-option label="链接" value="link"></el-option>
+                                        <el-option label="课程" value="course"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item>
+                                    <el-select v-model="searchForm.status" placeholder="状态" style="width: 100px">
+                                        <el-option label="全部" value=""></el-option>
+                                        <el-option label="进行中" value="active"></el-option>
+                                        <el-option label="已结束" value="ended"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                                <el-form-item class="flex items-center">
+                                    <el-date-picker
+                                        v-model="searchForm.dateRange"
+                                        type="daterange"
+                                        range-separator="至"
+                                        start-placeholder="开始日期"
+                                        end-placeholder="结束日期"
+                                        style="width: 240px"
+                                        format="YYYY-MM-DD"
+                                        value-format="YYYY-MM-DD"
+                                    />
+                                </el-form-item>
+                            </el-form>
+                            <div class="flex items-center relative">
+                                <el-button type="primary" icon="Search" class="mr-2">搜索</el-button>
+                                <el-button type="primary" icon="Plus" @click="dialogVisible = true">添加</el-button>
+                            </div>
+                        </div>
+
+                        <!-- 数据表格 -->
+                        <el-table :data="tableData" style="width: 100%" :header-cell-style="{background:'#fff', color:'#606266'}">
+                            <el-table-column prop="index" label="序号" width="60"></el-table-column>
+                            <el-table-column prop="id" label="广告ID" width="100"></el-table-column>
+                            <el-table-column prop="name" label="广告名称" min-width="150"></el-table-column>
+                            <el-table-column label="起止时间" width="300">
+                                <template #default="scope">
+                                    {{ scope.row.startTime }} 至 {{ scope.row.endTime }}
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="jumpType" label="跳转类型" width="100"></el-table-column>
+                            <el-table-column prop="sort" label="排序" width="60"></el-table-column>
+                            <el-table-column prop="status" label="状态" width="80">
+                                <template #default="scope">
+                                    <span :class="scope.row.status === '进行中' ? 'text-blue-500' : 'text-gray-500'">
+                                        {{ scope.row.status }}
+                                    </span>
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="操作" width="260">
+                                <template #default="scope">
+                                    <div class="flex items-center relative">
+                                        <!-- 模拟原型图中的蓝色按钮块 -->
+                                        <div class="action-btn" @click="handleEdit(scope.row)">编辑</div>
+                                        <div class="action-btn" @click="handleView(scope.row)">查看</div>
+                                        <div class="action-btn" @click="handleDisable(scope.row)">失效</div>
+                                        <div class="action-btn" @click="handleCopy(scope.row)">复制</div>
+                                        <div class="action-btn is-danger" @click="handleDelete(scope.row)">删除</div>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+
+                        <!-- 分页 -->
+                        <div class="mt-6 flex justify-end">
+                            <el-pagination background layout="prev, pager, next" :total="100"></el-pagination>
+                        </div>
+                    </div>
+                </div>
+            </el-container>
+        </el-container>
+
+        <!-- 模拟新增/编辑弹窗 -->
+        <el-dialog v-model="dialogVisible" title="编辑推荐页头图广告" width="700px" top="5vh" :close-on-click-modal="false">
+            <el-form :model="form" label-width="110px" class="pr-4">
+                <el-form-item label="广告名称" required>
+                    <div class="w-full">
+                        <el-input v-model="form.name" placeholder="请输入广告名称" maxlength="10" show-word-limit></el-input>
+                        <div class="text-xs text-gray-400 mt-1">*仅用于后台系统人员查看，前端不展示</div>
+                    </div>
+                </el-form-item>
+                
+                <el-form-item label="上传图片" required>
+                    <div class="w-full">
+                        <div class="border border-dashed border-gray-300 rounded p-2 bg-gray-50 w-full flex justify-center items-center relative overflow-hidden group" style="height: 180px;">
+                            <img v-if="form.image" :src="form.image" class="h-full object-contain" />
+                            <div v-else class="text-center">
+                                <el-icon class="text-3xl text-gray-400"><Plus /></el-icon>
+                                <div class="text-xs text-gray-400 mt-2">点击上传</div>
+                            </div>
+                            <!-- Mock Upload Overlay -->
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all cursor-pointer" @click="mockUpload"></div>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-1 line-height-tight">
+                            只能上传jpg/png/gif文件，且不超过3MB，图片尺寸：1125*610px
+                        </div>
+                    </div>
+                </el-form-item>
+
+                <el-form-item label="头图背景色" required>
+                    <div class="flex items-center">
+                        <el-color-picker v-model="form.bgColor"></el-color-picker>
+                        <span class="ml-2 text-xs text-gray-400">{{ form.bgColor }}</span>
+                    </div>
+                </el-form-item>
+
+                <el-form-item label="跳转路径" required>
+                    <el-select v-model="form.jumpPath" class="w-full">
+                        <el-option label="链接" value="link"></el-option>
+                        <el-option label="课程" value="course"></el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="跳转链接" required>
+                    <el-input v-model="form.link" placeholder="请输入跳转链接"></el-input>
+                </el-form-item>
+
+                <el-form-item label="排序" required>
+                    <div class="w-full">
+                        <el-input v-model="form.sort" placeholder="0"></el-input>
+                        <div class="text-xs text-gray-400 mt-1">*前端展示时，数值越大，越优先展示</div>
+                    </div>
+                </el-form-item>
+
+                <el-form-item label="起止时间" required>
+                    <el-date-picker
+                        v-model="form.dateRange"
+                        type="datetimerange"
+                        range-separator="至"
+                        start-placeholder="开始时间"
+                        end-placeholder="结束时间"
+                        style="width: 100%"
+                        format="YYYY-MM-DD HH:mm:ss"
+                        value-format="YYYY-MM-DD HH:mm:ss"
+                    />
+                </el-form-item>
+
+                <el-form-item label="使用终端" required>
+                    <el-checkbox-group v-model="form.terminals">
+                        <el-checkbox label="安卓">安卓</el-checkbox>
+                        <el-checkbox label="iOS">iOS</el-checkbox>
+                    </el-checkbox-group>
+                </el-form-item>
+
+                <div class="border-t pt-4 mt-2">
+                    <el-form-item label="针对人群的特殊规则" label-width="140px">
+                        <el-switch v-model="form.specialRulesEnabled" active-text="开启" inline-prompt></el-switch>
+                    </el-form-item>
+                    
+                    <div v-if="form.specialRulesEnabled" class="bg-gray-50 p-4 rounded border border-gray-200 ml-4 mb-4">
+                        <el-form-item label="针对用户" required label-width="100px">
+                            <el-select v-model="form.targetUser" placeholder="不限" class="w-full">
+                                <el-option label="不限" value="unlimited"></el-option>
+                                <el-option label="新用户" value="new"></el-option>
+                            </el-select>
+                        </el-form-item>
+                        
+                        <el-form-item label="用户可见天数" label-width="100px" :error="formErrors.visibleDays">
+                            <div class="flex items-center">
+                                <el-input v-model="form.visibleDays" style="width: 100px" placeholder="0"></el-input>
+                                <span class="mx-2">天</span>
+                                <span class="text-xs text-gray-400">若输入0，则长期可见，直至达成目标或到期</span>
+                            </div>
+                        </el-form-item>
+
+                        <el-form-item label="达成目标终止" required label-width="100px">
+                            <el-select v-model="form.targetGoal" class="w-full">
+                                <el-option label="无" value="none"></el-option>
+                                <el-option label="观看指定直播" value="watch_live"></el-option>
+                                <el-option label="购买指定商品" value="buy_product"></el-option>
+                                <el-option label="参加带学营" value="join_camp"></el-option>
+                                <el-option label="参加运营活动" value="join_activity"></el-option>
+                                <el-option label="添加销售企微" value="add_wechat"></el-option>
+                                <el-option label="提交表单" value="submit_form"></el-option>
+                            </el-select>
+                        </el-form-item>
+
+                        <!-- 动态表单项 -->
+                        <div v-if="form.targetGoal === 'watch_live'">
+                            <el-form-item label="直播ID" required label-width="100px">
+                                <div class="flex items-start w-full">
+                                    <div class="flex-1">
+                                        <el-input type="textarea" v-model="form.liveIds" :rows="4" placeholder="请输入直播ID (classroom)，每行一个" @input="verifiedResults = []"></el-input>
+                                        <!-- 验证结果 -->
+                                        <div v-if="verifiedResults.length > 0" class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                                            <div class="text-xs text-gray-500 mb-2">验证结果：</div>
+                                            <div v-for="(item, index) in verifiedResults" :key="index" class="flex items-center text-sm mb-1 last:mb-0">
+                                                <span class="font-mono text-gray-500 w-24 mr-2 text-right select-all">{{ item.id }}</span>
+                                                <el-icon class="text-gray-400 mr-2"><Right /></el-icon>
+                                                <span v-if="item.status === 'success'" class="text-blue-700 font-medium">{{ item.name }}</span>
+                                                <span v-else class="text-red-500 flex items-center">
+                                                    <el-icon class="mr-1"><CircleClose /></el-icon>
+                                                    {{ item.name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <el-button type="primary" link class="ml-2" @click="handleVerify">验证</el-button>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">注：观看以下任意一场直播超过15分钟视为达成目标</div>
+                            </el-form-item>
+                        </div>
+
+                        <div v-if="form.targetGoal === 'buy_product'">
+                            <el-form-item label="商品ID" required label-width="100px">
+                                <div class="flex items-start w-full">
+                                    <div class="flex-1">
+                                        <el-input type="textarea" v-model="form.productIds" :rows="4" placeholder="请输入商品ID，每行一个" @input="verifiedResults = []"></el-input>
+                                        <!-- 验证结果 -->
+                                        <div v-if="verifiedResults.length > 0" class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                                            <div class="text-xs text-gray-500 mb-2">验证结果：</div>
+                                            <div v-for="(item, index) in verifiedResults" :key="index" class="flex items-center text-sm mb-1 last:mb-0">
+                                                <span class="font-mono text-gray-500 w-24 mr-2 text-right select-all">{{ item.id }}</span>
+                                                <el-icon class="text-gray-400 mr-2"><Right /></el-icon>
+                                                <span v-if="item.status === 'success'" class="text-blue-700 font-medium">{{ item.name }}</span>
+                                                <span v-else class="text-red-500 flex items-center">
+                                                    <el-icon class="mr-1"><CircleClose /></el-icon>
+                                                    {{ item.name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <el-button type="primary" link class="ml-2" @click="handleVerify">验证</el-button>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">注：购买以下任意一个商品视为达成目标</div>
+                                <div class="text-xs text-gray-500">商品后台：<a href="#" class="text-blue-500">https://product-center.kaoyanvip.cn/product/index</a></div>
+                            </el-form-item>
+                        </div>
+
+                        <div v-if="form.targetGoal === 'join_camp'">
+                            <el-form-item label="打卡活动ID" required label-width="100px">
+                                <div class="flex items-start w-full">
+                                    <div class="flex-1">
+                                        <el-input type="textarea" v-model="form.campIds" :rows="4" placeholder="请输入打卡活动ID，每行一个" @input="verifiedResults = []"></el-input>
+                                        <!-- 验证结果 -->
+                                        <div v-if="verifiedResults.length > 0" class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                                            <div class="text-xs text-gray-500 mb-2">验证结果：</div>
+                                            <div v-for="(item, index) in verifiedResults" :key="index" class="flex items-center text-sm mb-1 last:mb-0">
+                                                <span class="font-mono text-gray-500 w-24 mr-2 text-right select-all">{{ item.id }}</span>
+                                                <el-icon class="text-gray-400 mr-2"><Right /></el-icon>
+                                                <span v-if="item.status === 'success'" class="text-blue-700 font-medium">{{ item.name }}</span>
+                                                <span v-else class="text-red-500 flex items-center">
+                                                    <el-icon class="mr-1"><CircleClose /></el-icon>
+                                                    {{ item.name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <el-button type="primary" link class="ml-2" @click="handleVerify">验证</el-button>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">注：参加以下任意一个带学营视为达成目标。</div>
+                                <div class="text-xs text-gray-500">打卡营后台：<a href="https://task.kaoyanvip.cn/admin/task-package/index" target="_blank" class="text-blue-500">https://task.kaoyanvip.cn/admin/task-package/index</a></div>
+                            </el-form-item>
+                        </div>
+
+                        <div v-if="form.targetGoal === 'join_activity'">
+                            <el-form-item label="活动ID" required label-width="100px">
+                                <div class="flex items-start w-full">
+                                    <div class="flex-1">
+                                        <el-input type="textarea" v-model="form.activityIds" :rows="4" placeholder="请输入活动ID，每行一个" @input="verifiedResults = []"></el-input>
+                                        <!-- 验证结果 -->
+                                        <div v-if="verifiedResults.length > 0" class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                                            <div class="text-xs text-gray-500 mb-2">验证结果：</div>
+                                            <div v-for="(item, index) in verifiedResults" :key="index" class="flex items-center text-sm mb-1 last:mb-0">
+                                                <span class="font-mono text-gray-500 w-24 mr-2 text-right select-all">{{ item.id }}</span>
+                                                <el-icon class="text-gray-400 mr-2"><Right /></el-icon>
+                                                <span v-if="item.status === 'success'" class="text-blue-700 font-medium">{{ item.name }}</span>
+                                                <span v-else class="text-red-500 flex items-center">
+                                                    <el-icon class="mr-1"><CircleClose /></el-icon>
+                                                    {{ item.name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <el-button type="primary" link class="ml-2" @click="handleVerify">验证</el-button>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">注：参与以下任意一个活动视为达成目标。</div>
+                                <div class="text-xs text-gray-500">活动ID管理后台：<a href="https://campaign.kaoyanvip.cn/active-management/active" target="_blank" class="text-blue-500">https://campaign.kaoyanvip.cn/active-management/active</a></div>
+                            </el-form-item>
+                        </div>
+
+                        <div v-if="form.targetGoal === 'add_wechat'">
+                            <el-form-item label-width="100px">
+                                <div class="text-xs text-gray-500">注：有微信好友关系的，则视为达成目标（不区分销售、班班，后续迭代）</div>
+                            </el-form-item>
+                        </div>
+
+                        <div v-if="form.targetGoal === 'submit_form'">
+                            <el-form-item label="表单ID" required label-width="100px">
+                                <div class="flex items-start w-full">
+                                    <div class="flex-1">
+                                        <el-input 
+                                            type="textarea" 
+                                            v-model="form.formIds" 
+                                            :rows="4" 
+                                            placeholder="请输入表单ID，每行一个"
+                                            @input="verifiedResults = []"
+                                        ></el-input>
+                                        
+                                        <!-- 验证结果展示区 -->
+                                        <div v-if="verifiedResults.length > 0" class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                                            <div class="text-xs text-gray-500 mb-2">验证结果：</div>
+                                            <div v-for="(item, index) in verifiedResults" :key="index" class="flex items-center text-sm mb-1 last:mb-0">
+                                                <span class="font-mono text-gray-500 w-24 mr-2 text-right select-all">{{ item.id }}</span>
+                                                <el-icon class="text-gray-400 mr-2"><Right /></el-icon>
+                                                <span v-if="item.status === 'success'" class="text-blue-700 font-medium">{{ item.name }}</span>
+                                                <span v-else class="text-red-500 flex items-center">
+                                                    <el-icon class="mr-1"><CircleClose /></el-icon>
+                                                    {{ item.name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <el-button type="primary" link class="ml-2" @click="handleVerify">验证</el-button>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">注：已提交以下任意一个表单视为达成目标</div>
+                                <div class="text-xs text-gray-500">表单后台：<a href="https://h5.kaoyanvip.cn/admin/form/" target="_blank" class="text-blue-500">https://h5.kaoyanvip.cn/admin/form/</a></div>
+                            </el-form-item>
+                        </div>
+                    </div>
+                </div>
+
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer flex justify-center pb-4">
+                    <el-button @click="dialogVisible = false" class="w-24">取消</el-button>
+                    <el-button type="primary" @click="handleSave" class="w-24">确定</el-button>
+                </span>
+            </template>
+        </el-dialog>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue;
+        const Icons = ElementPlusIconsVue;
+
+        const app = createApp({
+            setup() {
+                const isCollapse = ref(false);
+                const activeTopTab = ref('yantu');
+                const currentYear = ref('2026');
+                const searchForm = ref({
+                    id: '',
+                    name: '',
+                    type: '',
+                    status: '',
+                    dateRange: []
+                });
+                const verifiedResults = ref([]);
+                const dialogVisible = ref(false);
+                const form = ref({
+                    name: '',
+                    image: '',
+                    bgColor: '#FF5722',
+                    jumpPath: 'link',
+                    link: '',
+                    sort: 0,
+                    dateRange: [],
+                    terminals: ['安卓', 'iOS'],
+                    specialRulesEnabled: true,
+                    targetUser: 'unlimited',
+                    visibleDays: '',
+                    targetGoal: 'buy_product',
+                    productIds: 'CP003133000',
+                    formIds: 'jkbjIUOcR\n9duwpJgqX\n_z0QXMHow',
+                    liveIds: '30574401\n30574402\n30574404',
+                    campIds: '510\n538',
+                    activityIds: 'YT2601003'
+                });
+                
+                const formErrors = ref({
+                    visibleDays: ''
+                });
+
+                // Mock Data based on the image
+                const tableData = ref([
+                    { index: 1, id: '10002793', name: '26-复试规划', startTime: '2025-12-21 15:00', endTime: '2026-04-30 00:00', jumpType: '链接', sort: 0, status: '进行中' },
+                    { index: 2, id: '10002792', name: '26-12月英语规划', startTime: '2025-12-20 08:31', endTime: '2025-12-20 13:59', jumpType: '课程', sort: 0, status: '已结束' },
+                    { index: 3, id: '10002791', name: '26-12月名师祝语', startTime: '2025-12-20 14:00', endTime: '2025-12-21 14:59', jumpType: '公开直播', sort: 0, status: '已结束' },
+                    { index: 4, id: '10002790', name: '26-12月政治预测', startTime: '2025-12-17 00:01', endTime: '2025-12-20 08:30', jumpType: '课程', sort: 0, status: '已结束' },
+                    { index: 5, id: '10002754', name: '26-12月政治黄金', startTime: '2025-12-11 00:01', endTime: '2025-12-17 00:00', jumpType: '课程', sort: 0, status: '已结束' },
+                    { index: 6, id: '10002728', name: '26-12月月考', startTime: '2025-12-06 00:01', endTime: '2025-12-08 00:00', jumpType: '测试聚合', sort: 0, status: '已结束' },
+                    { index: 7, id: '10002727', name: '26-12月政治黄金', startTime: '2025-12-08 00:01', endTime: '2025-12-11 00:00', jumpType: '课程', sort: 0, status: '已结束' },
+                    { index: 8, id: '10002710', name: '26-11月-2场', startTime: '2025-12-04 00:01', endTime: '2025-12-06 00:00', jumpType: '课程', sort: 0, status: '已结束' },
+                    { index: 9, id: '10002709', name: '26-11月-2场', startTime: '2025-11-29 00:01', endTime: '2025-12-04 00:00', jumpType: '课程', sort: 0, status: '已结束' },
+                    { index: 10, id: '10002692', name: '26-11月-2场', startTime: '2025-11-26 00:01', endTime: '2025-11-29 00:00', jumpType: '课程', sort: 0, status: '已结束' }
+                ]);
+
+                const handleEdit = (row) => {
+                    console.log('Edit', row);
+                    form.value = {
+                        name: row.name,
+                        image: 'https://via.placeholder.com/600x300/FF5722/FFFFFF?text=Banner+Image', // Mock image
+                        bgColor: '#FF5722',
+                        jumpPath: row.jumpType === '链接' ? 'link' : 'course',
+                        link: 'https://h5.kaoyanvip.cn/rt?tsgr?mg_ts=GLP0XPKhry7&hike=1',
+                        sort: row.sort,
+                        dateRange: [row.startTime, row.endTime],
+                        terminals: ['安卓', 'iOS'],
+                        specialRulesEnabled: true,
+                        targetUser: 'unlimited',
+                        visibleDays: '',
+                        targetGoal: 'buy_product',
+                        productIds: 'CP003133000\nCP003133001\nCP003133002',
+                        formIds: 'jkbjIUOcR\n9duwpJgqX\n_z0QXMHow'
+                    };
+                    verifiedResults.value = []; // Reset verification
+                     dialogVisible.value = true;
+                };
+
+                const mockUpload = () => {
+                    form.value.image = 'https://via.placeholder.com/600x300/FF5722/FFFFFF?text=New+Uploaded+Image';
+                };
+
+                const handleVerify = () => {
+                    const goal = form.value.targetGoal;
+                    
+                    const mockMaps = {
+                        watch_live: {
+                            '30574401': '赢在寒假，复试真实模拟面试解析',
+                            '30574402': '洞察考研新趋势，教你择校定专的黄金法则',
+                            '30574404': '考研英语单词记忆：轻松突破词汇障碍（第2期）'
+                        },
+                        buy_product: {
+                            'CP003133000': '大一大二考研规划课(不含数学)',
+                            'CP003133001': '英语一/二核心词汇书',
+                            'CP003133002': '数学基础过关800题'
+                        },
+                        join_camp: {
+                            '510': '数学三大计算训练营',
+                            '538': '15天通关生理学核心框架',
+                            'CAMP2024001': '21天英语单词打卡营',
+                            'CAMP2024002': '早起背书挑战营'
+                        },
+                        join_activity: {
+                            'YT2601003': '3月开学季',
+                            'ACT888001': '双十一课程特惠专场',
+                            'ACT888002': '研友组队领资料'
+                        },
+                        submit_form: {
+                            'jkbjIUOcR': '2026年寒假集训统计',
+                            '9duwpJgqX': '新手必修手册邮寄地址登记',
+                            '_z0QXMHow': '寒假伴学活动课程开通及抽奖通道'
+                        }
+                    };
+
+                    const map = mockMaps[goal];
+                    if (!map) return;
+
+                    let input = '';
+                    if (goal === 'watch_live') input = form.value.liveIds;
+                    else if (goal === 'buy_product') input = form.value.productIds;
+                    else if (goal === 'join_camp') input = form.value.campIds;
+                    else if (goal === 'join_activity') input = form.value.activityIds;
+                    else if (goal === 'submit_form') input = form.value.formIds;
+
+                    if (!input) return;
+
+                    const lines = input.split('\n');
+                    const results = [];
+                    
+                    lines.forEach(line => {
+                        const id = line.trim();
+                        if (id) {
+                            if (map[id]) {
+                                results.push({ id: id, name: map[id], status: 'success' });
+                            } else {
+                                results.push({ id: id, name: '未找到匹配内容，请检查', status: 'error' });
+                            }
+                        }
+                    });
+                    
+                    verifiedResults.value = results;
+                    
+                    if (results.length > 0) {
+                        const successCount = results.filter(r => r.status === 'success').length;
+                        const errorCount = results.filter(r => r.status === 'error').length;
+                        
+                        if (errorCount > 0) {
+                             // Optional: Can still keep a subtle toast if needed, or remove completely as per request.
+                             // Removing global toast as requested to rely on inline display.
+                        } else {
+                            ElementPlus.ElMessage.success(`成功验证 ${successCount} 个目标对象`);
+                        }
+                    }
+                };
+
+                const handleView = (row) => console.log('View', row);
+                const handleDisable = (row) => console.log('Disable', row);
+                const handleCopy = (row) => console.log('Copy', row);
+                const handleDelete = (row) => {
+                    ElementPlus.ElMessageBox.confirm(
+                        '确定要删除该广告吗？',
+                        '警告',
+                        {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning',
+                        }
+                    ).then(() => {
+                        ElementPlus.ElMessage.success('删除成功');
+                    }).catch(() => {});
+                };
+
+                const handleSave = () => {
+                    // Reset errors
+                    formErrors.value = { visibleDays: '' };
+
+                    // Validation logic
+                    let isValid = true;
+                    if (form.value.specialRulesEnabled && !form.value.visibleDays && form.value.visibleDays !== 0 && form.value.visibleDays !== '0') {
+                        formErrors.value.visibleDays = '请完善填写';
+                        isValid = false;
+                    }
+
+                    if (!isValid) {
+                        return;
+                    }
+
+                    // Success logic
+                    dialogVisible.value = false;
+                    ElementPlus.ElMessage.success('保存成功');
+                };
+
+                return {
+                    isCollapse,
+                    activeTopTab,
+                    currentYear,
+                    searchForm,
+                    tableData,
+                    dialogVisible,
+                    form,
+                    formErrors,
+                    handleEdit,
+                    handleView,
+                    handleDisable,
+                    handleCopy,
+                    handleDelete,
+                    mockUpload,
+                    handleVerify,
+                    verifiedResults,
+                    handleSave
+                };
+            }
+        });
+
+        for (const [key, component] of Object.entries(Icons)) {
+            app.component(key, component);
+        }
+
+        app.use(ElementPlus);
+        app.mount('#app');
     </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+</body>
 </html>
