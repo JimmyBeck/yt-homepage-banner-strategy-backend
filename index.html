@@ -372,7 +372,7 @@
                             </el-select>
                         </el-form-item>
                         
-                        <el-form-item label="用户可见天数" label-width="100px" :error="formErrors.visibleDays">
+                        <el-form-item label="用户可见天数" required label-width="100px" :error="formErrors.visibleDays">
                             <div class="flex items-center">
                                 <el-input v-model="form.visibleDays" style="width: 100px" placeholder="0"></el-input>
                                 <span class="mx-2">天</span>
@@ -503,35 +503,40 @@
                         </div>
 
                         <div v-if="form.targetGoal === 'submit_form'">
-                            <el-form-item label="表单ID" required label-width="100px">
-                                <div class="flex items-start w-full">
-                                    <div class="flex-1">
-                                        <el-input 
-                                            type="textarea" 
-                                            v-model="form.formIds" 
-                                            :rows="4" 
-                                            placeholder="请输入表单ID，每行一个"
-                                            @input="verifiedResults = []"
-                                        ></el-input>
-                                        
-                                        <!-- 验证结果展示区 -->
-                                        <div v-if="verifiedResults.length > 0" class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
-                                            <div class="text-xs text-gray-500 mb-2">验证结果：</div>
-                                            <div v-for="(item, index) in verifiedResults" :key="index" class="flex items-center text-sm mb-1 last:mb-0">
-                                                <span class="font-mono text-gray-500 w-24 mr-2 text-right select-all">{{ item.id }}</span>
-                                                <el-icon class="text-gray-400 mr-2"><Right /></el-icon>
-                                                <span v-if="item.status === 'success'" class="text-blue-700 font-medium">{{ item.name }}</span>
-                                                <span v-else class="text-red-500 flex items-center">
-                                                    <el-icon class="mr-1"><CircleClose /></el-icon>
-                                                    {{ item.name }}
-                                                </span>
+                            <el-form-item required label-width="100px">
+                                <template #label>
+                                    <span style="white-space: nowrap;">表单ID</span>
+                                </template>
+                                <div class="w-full">
+                                    <div class="flex items-start w-full">
+                                        <div class="flex-1">
+                                            <el-input 
+                                                type="textarea" 
+                                                v-model="form.formIds" 
+                                                :rows="4" 
+                                                placeholder="请输入表单ID，每行一个"
+                                                @input="verifiedResults = []"
+                                            ></el-input>
+                                            
+                                            <!-- 验证结果展示区 -->
+                                            <div v-if="verifiedResults.length > 0" class="mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                                                <div class="text-xs text-gray-500 mb-2">验证结果：</div>
+                                                <div v-for="(item, index) in verifiedResults" :key="index" class="flex items-center text-sm mb-1 last:mb-0">
+                                                    <span class="font-mono text-gray-500 w-24 mr-2 text-right select-all">{{ item.id }}</span>
+                                                    <el-icon class="text-gray-400 mr-2"><Right /></el-icon>
+                                                    <span v-if="item.status === 'success'" class="text-blue-700 font-medium">{{ item.name }}</span>
+                                                    <span v-else class="text-red-500 flex items-center">
+                                                        <el-icon class="mr-1"><CircleClose /></el-icon>
+                                                        {{ item.name }}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
+                                        <el-button type="primary" link class="ml-2" @click="handleVerify">验证</el-button>
                                     </div>
-                                    <el-button type="primary" link class="ml-2" @click="handleVerify">验证</el-button>
+                                    <div class="text-xs text-gray-500 mt-1">注：已提交以下任意一个表单视为达成目标</div>
+                                    <div class="text-xs text-gray-500 mt-1">表单后台：<a href="https://h5.kaoyanvip.cn/admin/form/" target="_blank" class="text-blue-500">https://h5.kaoyanvip.cn/admin/form/</a></div>
                                 </div>
-                                <div class="text-xs text-gray-500 mt-1">注：已提交以下任意一个表单视为达成目标</div>
-                                <div class="text-xs text-gray-500">表单后台：<a href="https://h5.kaoyanvip.cn/admin/form/" target="_blank" class="text-blue-500">https://h5.kaoyanvip.cn/admin/form/</a></div>
                             </el-form-item>
                         </div>
                     </div>
