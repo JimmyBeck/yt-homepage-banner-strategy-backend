@@ -365,11 +365,16 @@
                     </el-form-item>
                     
                     <div v-if="form.specialRulesEnabled" class="bg-gray-50 p-4 rounded border border-gray-200 ml-4 mb-4">
-                        <el-form-item label="针对用户" required label-width="100px" :error="formErrors.targetUser">
-                            <el-select v-model="form.targetUser" placeholder="不限" class="w-full">
-                                <el-option label="不限" value="unlimited"></el-option>
-                                <el-option label="新用户" value="new"></el-option>
-                            </el-select>
+                        <el-form-item label="针对用户" required label-width="120px" :error="formErrors.targetUser">
+                            <div class="w-full">
+                                <el-select v-model="form.targetUser" placeholder="不限" class="w-full">
+                                    <el-option label="不限" value="unlimited"></el-option>
+                                    <el-option label="新用户" value="new"></el-option>
+                                </el-select>
+                                <div v-if="form.targetUser === 'new'" class="text-xs text-gray-400 mt-1">
+                                    新用户的定义为注册7天内，若要修改请联系对应产品经理
+                                </div>
+                            </div>
                         </el-form-item>
                         
                         <!-- 新增：针对用户人群包 -->
@@ -623,9 +628,9 @@
                     dateRange: [],
                     terminals: ['安卓', 'iOS'],
                     specialRulesEnabled: true,
-                    targetUser: 'unlimited',
-                    targetUserGroup: 'bought_product', // 新增字段
-                    purchasedProductIds: 'CP003133000\nCP003133001\nCP003133002', // 新增字段
+                    targetUser: 'unlimited', // 默认不限
+                    targetUserGroup: '', // 默认不限（空字符串）
+                    purchasedProductIds: 'CP003133000\nCP003133001\nCP003133002',  // 新增字段
                     visibleDays: '',
                     targetGoal: 'buy_product',
                     productIds: 'CP003133000',
@@ -678,9 +683,8 @@
                         terminals: ['安卓', 'iOS'],
                         specialRulesEnabled: true,
                         targetUser: 'unlimited',
-                        visibleDays: '',
-                        targetGoal: 'buy_product',
-                        productIds: 'CP003133000\nCP003133001\nCP003133002',
+                        targetUserGroup: '', // Reset to default
+                        purchasedProductIds: 'CP003133000\nCP003133001\nCP003133002',
                         formIds: 'jkbjIUOcR\n9duwpJgqX\n_z0QXMHow'
                     };
                     verifiedResults.value = []; // Reset verification
